@@ -1,0 +1,9 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.session
+*.session-journal
+.env
+*.sqlite3
+data/
+output/

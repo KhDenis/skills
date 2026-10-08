@@ -1,0 +1,4 @@
+interface:
+  display_name: "Telegram Archive Research"
+  short_description: "Архивирование и поиск по Telegram-данным"
+  default_prompt: "Используй $telegram-archive-research, чтобы синхронизировать разрешённый Telegram-архив и выполнить поиск по чатам."
