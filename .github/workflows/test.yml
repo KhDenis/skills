@@ -1,0 +1,18 @@
+name: Test skills
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  telegram-archive-research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r telegram-archive-research/assets/engine/requirements.txt
+      - run: python -m unittest discover -s telegram-archive-research/assets/engine/tests -q
+      - run: bash -n telegram-archive-research/scripts/install.sh
+      - run: python -m py_compile telegram-archive-research/scripts/configure.py telegram-archive-research/assets/engine/scripts/*.py

@@ -27,13 +27,17 @@ Resolve the engine in this order: `$TELEGRAM_ARCHIVE_HOME`, `~/telegram-chat-exp
 7. For photo searches, first check whether the visual index exists. If absent, explain the indexing cost and build the reusable pipeline described in [architecture.md](references/architecture.md), rather than manually inspecting every image for each request.
 8. After mutations, verify observable counts/files and report where results were written. Avoid leaving foreground sessions running when a background job is appropriate.
 
+For requests that begin with an unknown set of work chats and end with project folders, follow the staged workflow in [work-projects.md](references/work-projects.md). Do not collapse discovery, approval, and image download into one step.
+
 ## Current Capabilities
 
 - `scripts/export_chat.py --list-chats`: discover dialogs.
 - `scripts/export_chat.py --chat ...`: export one dialog and optionally transcribe voice messages and video notes.
 - `scripts/personal_text_archive.py`: incrementally synchronize and export the cumulative text/transcript database.
 - `scripts/idle_transcribe.py`: low-priority background transcription governed by charging, idle, power, and thermal checks.
+- `scripts/work_project_archive.py`: rank possible work chats, record approval decisions, synchronize approved history, plan/download images, export analysis data, and materialize project folders with timelines.
 - SQLite database: `data/personal_text_archive.sqlite3`.
+- Work-project database: `data/work_projects.sqlite3`.
 - Existing cumulative output: `output/personal_text_export/`.
 
 Read [architecture.md](references/architecture.md) when adding another Telegram account, cross-chat media search, OCR, embeddings, or a new durable index.

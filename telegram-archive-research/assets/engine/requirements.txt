@@ -3,3 +3,5 @@ python-dotenv>=1.0.1
 PySocks>=1.7.1
 python-socks[asyncio]>=2.4.0
 tqdm>=4.66.0
+Pillow>=10.0.0
+pillow-heif>=0.18.0
