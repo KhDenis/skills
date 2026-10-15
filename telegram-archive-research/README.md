@@ -39,3 +39,18 @@ export/resume and an application switch to a fixed version with rollback.
 To roll back this source change, use the previous skills main `06fe346`; no live
 installation is changed by merging the source. Do not downgrade a live data schema
 without its own compatibility check and backup.
+
+## Bounded live media check (2026-10-15)
+
+Using the core scripts from `db4da64` and an existing authorized session, a private
+harness invoked `media_plan` / `download_media` on an isolated five-row media index.
+The original archive was read only and downloaded bytes were written separately.
+Five photos (604,055 bytes) were downloaded in two processes: 2 then 3. A third
+invocation downloaded 0; five files remained. Pillow verified each image and its
+SHA-256 matched the archived reference. No new login was performed.
+
+This proves that limited photo retrieval, continuation after an orderly bounded
+stop and repeat skipping worked for this selection. It does not prove recovery
+from a killed process or power loss, other attachment kinds, full history export
+or the application's switch to the portable module. No profile, source message
+identifier, customer file, session or private verification harness is published.

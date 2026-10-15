@@ -63,8 +63,21 @@
   "checks": [
     "python -m unittest discover -s telegram-archive-research/assets/engine/tests -v"
   ],
-  "real_runs": [],
-  "status": "Source migration candidate; synthetic regression tests only. Clean install, network export, interruption/resume and Go Decor pinned-version switch await separate acceptance.",
+  "real_runs": [
+    {
+      "date": "2026-10-15",
+      "source_commit": "db4da646ede507379e0db6aaad6489a623138b56",
+      "scenario": "Bounded live photo download using an existing authorized session, isolated media index and output directory",
+      "selected_photos": 5,
+      "total_bytes": 604055,
+      "first_process_downloaded": 2,
+      "next_process_downloaded": 3,
+      "repeat_process_downloaded": 0,
+      "verified": "All five files decoded by Pillow and matched SHA-256 of archived reference files; five output files after repeat",
+      "limits": "Existing user session reused without login. No production archive DB writes. Orderly bounded process stop, not a crash/power-loss test. Video/audio/documents, full sync/export and Go Decor pinned-version switch not checked."
+    }
+  ],
+  "status": "Canonical source; clean minimal install and bounded live photo download/restart/dedup verified. Full export/crash-resume, other media kinds and Go Decor pinned-version switch remain unverified.",
   "canonical_source": "KhDenis/skills: telegram-archive-research/assets/engine",
   "excluded_adapters": [
     "audio_notes.py export-kb remains in the private application because it writes the application KB schema",
