@@ -4,6 +4,12 @@ The skill contains a sanitized engine snapshot in `assets/engine`. It contains n
 
 ## Install
 
+The minimal installer has been checked with Python 3.12 on macOS Intel. It uses
+`python3` from PATH; make sure that is the intended interpreter. For a reproducible
+installation, check out the desired Git commit before running the installer.
+Install into a **new profile** before upgrading a working archive.
+
+
 Copy the entire `telegram-archive-research` directory to `~/.codex/skills/` on the destination machine, then run:
 
 ```bash
@@ -48,3 +54,37 @@ Re-run `install.sh` from the newer skill bundle. It replaces only engine code an
 ```
 
 Back up the destination's `.env`, `*.session`, and `data/` independently. They are deliberately not included in the portable skill archive.
+
+## Check a new installation before login
+
+```bash
+PROFILE="$HOME/telegram-profiles/test"
+bash telegram-archive-research/scripts/install.sh --target "$PROFILE"
+"$PROFILE/.venv/bin/python3" "$PROFILE/scripts/diagnose.py" --offline --json
+"$PROFILE/.venv/bin/python3" "$PROFILE/scripts/work_project_archive.py" --help
+```
+
+`installation_ok: true` confirms the minimal local Python dependencies;
+`telegram_configured: false` is expected before configuration. The offline check
+makes no network calls, creates no Telegram session and does not print credential
+or proxy values. `ffmpeg_available` is informational for the minimal install;
+audio/video processing additionally needs ffmpeg and transcription dependencies.
+Without `--offline`, the existing diagnostic checks network reachability.
+
+For interactive authorization, run the configuration helper in your own terminal:
+
+```bash
+python3 telegram-archive-research/scripts/configure.py --target "$PROFILE"
+```
+
+API credentials are saved only to the profile's `.env` (mode 600). Enter the login
+code and optional 2FA password locally when Telegram requests them; never pass them
+as command arguments, Issue text or messages to an agent. `--no-auth` writes the
+configuration interactively without starting login. With blank credentials,
+`export_chat.py --list-chats` must stop with a missing-configuration error before
+creating a session; this is expected, not proof of a successful login.
+
+The 2026-10-15 clean-profile check verified a fresh venv, installation, offline
+report, CLI help and safe refusal without credentials. A second installer run
+preserved the existing `.env`. Telegram login, live media and model execution were
+not part of that installation check.
