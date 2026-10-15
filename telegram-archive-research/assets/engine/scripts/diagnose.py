@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import os
+import argparse
+import json
+import importlib.util
 import platform
 import shutil
 import socket
@@ -74,8 +77,34 @@ def curl_head(args: list[str]) -> str:
     return "\n".join(output.splitlines()[:8])
 
 
-def main() -> None:
+def local_report() -> dict:
+    modules = {name: importlib.util.find_spec(name) is not None
+               for name in ('telethon', 'dotenv', 'socks', 'python_socks', 'tqdm', 'PIL')}
+    required = ('TG_API_ID', 'TG_API_HASH', 'TG_PHONE')
+    missing = [name for name in required if not os.environ.get(name, '').strip()]
+    root = Path(__file__).resolve().parents[1]
+    return {'installation_ok': all(modules.values()), 'python': platform.python_version(),
+            'dependencies': modules, 'ffmpeg_available': shutil.which('ffmpeg') is not None,
+            'telegram_configured': not missing, 'missing_config': missing,
+            'env_file_exists': (root / '.env').is_file(), 'network_checked': False}
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description='Inspect archive installation and connectivity without printing credentials.')
+    parser.add_argument('--offline', action='store_true', help='Check local dependencies and configuration only; no network or login')
+    parser.add_argument('--json', action='store_true', help='Machine-readable local report; requires --offline')
+    args = parser.parse_args(argv)
+    if args.json and not args.offline:
+        parser.error('--json requires --offline')
     load_project_env()
+    if args.offline:
+        report = local_report()
+        if args.json:
+            print(json.dumps(report, sort_keys=True))
+        else:
+            for name, value in report.items():
+                print(f'{name}: {value}')
+        return 0 if report['installation_ok'] else 1
 
     print("== System ==")
     print(f"OS: {platform.platform()}")
@@ -97,7 +126,7 @@ def main() -> None:
     for key, value in sorted(os.environ.items()):
         if "proxy" in key.lower():
             found_env = True
-            print(f"{key}={value}")
+            print(f"{key}=[configured]")
     if not found_env:
         print("No proxy environment variables found.")
     print()
@@ -136,7 +165,8 @@ def main() -> None:
             print("No TG_PROXY_* configured.")
     except SystemExit as exc:
         print(exc)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
