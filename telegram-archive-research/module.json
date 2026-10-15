@@ -1,0 +1,73 @@
+{
+  "name": "telegram-archive",
+  "version": "0.3.0",
+  "origin": "KhDenis/godecor services/telegram-archive @ 3342ccf (2026-10-15)",
+  "purpose": "Turn a consented Telegram account into a local archive of work projects: text search, chat approval, text sync, targeted media, per-project folders and one chronology.",
+  "knows_nothing_about": [
+    "Go Decor",
+    "Bridge",
+    "ChatGPT",
+    "task queues"
+  ],
+  "install": "scripts/install.sh --target <profile_dir>; scripts/configure.py --target <profile_dir>",
+  "profile": {
+    "dir": "<profile_dir>, for example ~/telegram-profiles/<name>",
+    "secrets": [
+      ".env (API id/hash, phone, proxy)",
+      "*.session"
+    ],
+    "data": [
+      "data/*.sqlite3",
+      "output/",
+      "media/"
+    ],
+    "rule": "Secrets and data stay in the profile directory; never in Git, chats or prompts."
+  },
+  "inputs": {
+    "keywords": "text file, one phrase per line (whole words; word forms listed separately)",
+    "approvals": "chat ids passed to approve / reject",
+    "manifest": "projects.json: projects with chats, keywords and dialog_id:message_id refs"
+  },
+  "commands": {
+    "core": {
+      "work_project_archive.py search": "full-history text search without media -> output/work_projects/search_hits.md",
+      "work_project_archive.py approve | reject": "decide which chats enter the archive",
+      "work_project_archive.py sync": "text and attachment metadata of approved chats only",
+      "work_project_archive.py export-analysis": "-> approved_messages.jsonl",
+      "work_project_archive.py check-manifest": "validate projects.json against the archive",
+      "work_project_archive.py plan-media | download-media": "media only for manifest messages (+ window), with confirmation",
+      "work_project_archive.py materialize": "per-project folders: timeline.md, messages.jsonl, media/",
+      "work_project_archive.py status": "archive counts",
+      "chronology.py timeline | report": "chronology.md / chronology.jsonl across projects; JSON state report",
+      "diagnose.py": "check config, session and connectivity"
+    },
+    "derived_views": {
+      "image_tags.py auto | set | report": "tag images render / drawing / site / finished",
+      "work_project_archive.py contact-sheets": "labelled image grids per project for review",
+      "portfolio.py build | check": "portfolio.json skeleton per project",
+      "portfolio_html.py": "HTML/PDF rendering of portfolio.json",
+      "audio_notes.py scan | download | transcribe | triage": "voice, audio and video notes: durations without download, files, Whisper transcripts, context triage (needs requirements-transcribe.txt on Python 3.12)",
+      "whisper_batch.py": "standalone directory -> JSONL transcriber for a compute node; audio_notes.py import-jsonl loads the result"
+    },
+    "legacy": [
+      "export_chat.py",
+      "personal_text_archive.py",
+      "idle_transcribe.py",
+      "work_project_archive.py discover | plan-images | download-images"
+    ]
+  },
+  "analysis": {
+    "deterministic": "search, approval, sync, chronology and report run without a model",
+    "model_step": "projects.json is drafted from approved_messages.jsonl by an agent; no model call is built into the module yet"
+  },
+  "checks": [
+    "python -m unittest discover -s telegram-archive-research/assets/engine/tests -v"
+  ],
+  "real_runs": [],
+  "status": "Source migration candidate; synthetic regression tests only. Clean install, network export, interruption/resume and Go Decor pinned-version switch await separate acceptance.",
+  "canonical_source": "KhDenis/skills: telegram-archive-research/assets/engine",
+  "excluded_adapters": [
+    "audio_notes.py export-kb remains in the private application because it writes the application KB schema",
+    "m4_whisper_task.sh remains in the private application because it encodes server paths"
+  ]
+}

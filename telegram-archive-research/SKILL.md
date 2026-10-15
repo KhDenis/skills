@@ -5,7 +5,9 @@ description: "Work with consented local Telegram archives: discover dialogs, exp
 
 # Telegram Archive Research
 
-Resolve the engine in this order: `$TELEGRAM_ARCHIVE_HOME`, `~/telegram-chat-exporter`, then the legacy path `/Users/admin/agent/telegram-chat-exporter`. Reuse its virtual environment, Telegram session, proxy configuration, checkpoints, and databases instead of rebuilding one-off scripts in each conversation. If no engine exists, install the sanitized bundled engine by following [deployment.md](references/deployment.md).
+The canonical bundled source is maintained in this repository under `assets/engine`; see [README.md](README.md) for the version and migration limits. Application-specific KB exporters and server wrappers are outside this package.
+
+Resolve the engine in this order: `$TELEGRAM_ARCHIVE_HOME`, then `~/telegram-chat-exporter`. Reuse its virtual environment, Telegram session, proxy configuration, checkpoints, and databases instead of rebuilding one-off scripts in each conversation. If no engine exists, install the sanitized bundled engine by following [deployment.md](references/deployment.md).
 
 ## Boundaries
 
@@ -35,7 +37,11 @@ For requests that begin with an unknown set of work chats and end with project f
 - `scripts/export_chat.py --chat ...`: export one dialog and optionally transcribe voice messages and video notes.
 - `scripts/personal_text_archive.py`: incrementally synchronize and export the cumulative text/transcript database.
 - `scripts/idle_transcribe.py`: low-priority background transcription governed by charging, idle, power, and thermal checks.
-- `scripts/work_project_archive.py`: rank possible work chats, record approval decisions, synchronize approved history, plan/download images, export analysis data, and materialize project folders with timelines.
+- `scripts/work_project_archive.py`: search the full history by text, rank possible work chats, record approval decisions, synchronize approved history, plan/download media for chosen project messages, export analysis data, and materialize project folders with timelines.
+- `scripts/image_tags.py`: tag project attachments as render, drawing, photo, site photo or finished object by cheap rules and by hand; database and local files only.
+- `scripts/portfolio.py`: write and check the per-project `portfolio.json` skeleton (dates, partners, before/after candidates) while keeping hand-written fields.
+- `scripts/portfolio_html.py`: render ready `portfolio.json` files as a printable HTML portfolio and optionally a PDF (trial candidate for the designer stage).
+- `scripts/chronology.py`: write one chronology across materialized projects and print the archive state as JSON; reads the database only.
 - SQLite database: `data/personal_text_archive.sqlite3`.
 - Work-project database: `data/work_projects.sqlite3`.
 - Existing cumulative output: `output/personal_text_export/`.
