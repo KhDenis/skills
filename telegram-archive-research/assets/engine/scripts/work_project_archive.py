@@ -547,6 +547,34 @@ async def after_flood_wait(call: Any, max_wait: int = MAX_FLOOD_WAIT) -> Any:
             await asyncio.sleep(exc.seconds + 1)
 
 
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open('rb') as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def store_media(source: Path, destination: Path, expected_digest: str) -> None:
+    """Publish complete bytes atomically, repairing an interrupted older copy if needed."""
+    if destination.is_file() and file_sha256(destination) == expected_digest:
+        return
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=destination.parent, prefix='.media-', suffix='.tmp', delete=False) as handle:
+            temporary = Path(handle.name)
+            with source.open('rb') as incoming:
+                shutil.copyfileobj(incoming, handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        if file_sha256(temporary) != expected_digest:
+            raise OSError('Media copy checksum mismatch')
+        temporary.replace(destination)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
 async def download_rows(db: sqlite3.Connection, rows: list[sqlite3.Row]) -> int:
     """Download the given media rows into the content-addressed store; returns the number stored.
 
@@ -580,16 +608,11 @@ async def download_rows(db: sqlite3.Connection, rows: list[sqlite3.Row]) -> int:
                 if not path_raw:
                     continue
                 source = Path(path_raw)
-                digest_hash = hashlib.sha256()
-                with source.open("rb") as handle:
-                    for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                        digest_hash.update(chunk)
-                digest = digest_hash.hexdigest()
+                digest = file_sha256(source)
                 suffix = source.suffix.casefold() or Path(row["original_name"] or "").suffix.casefold() or ".bin"
                 destination = MEDIA_ROOT / digest[:2] / f"{digest}{suffix}"
                 destination.parent.mkdir(parents=True, exist_ok=True)
-                if not destination.exists():
-                    shutil.move(str(source), destination)
+                store_media(source, destination, digest)
                 relative = str(destination.relative_to(PROJECT_ROOT))
                 with db:
                     db.execute("""UPDATE media SET sha256=?,local_path=?,size_bytes=?,downloaded_at=?
@@ -715,10 +738,19 @@ def export_analysis(db: sqlite3.Connection) -> Path:
     path = RESULTS_ROOT / "approved_messages.jsonl"
     query = """SELECT m.*,d.title dialog_title,d.username FROM messages m JOIN dialogs d ON d.id=m.dialog_id
         WHERE d.review_status='approved' ORDER BY m.date,m.dialog_id,m.id"""
-    with path.open("w", encoding="utf-8") as handle:
-        for row in db.execute(query):
-            handle.write(json.dumps(dict(row), ensure_ascii=False) + "\n")
-    os.chmod(path, 0o600)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent,
+                                         prefix='.approved_messages-', suffix='.tmp', delete=False) as handle:
+            temporary = Path(handle.name)
+            for row in db.execute(query):
+                handle.write(json.dumps(dict(row), ensure_ascii=False) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
     print(f"Wrote {path}", flush=True)
     return path
 

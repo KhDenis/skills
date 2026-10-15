@@ -1,6 +1,6 @@
 {
   "name": "telegram-archive",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "origin": "KhDenis/godecor services/telegram-archive @ 3342ccf (2026-10-15)",
   "purpose": "Turn a consented Telegram account into a local archive of work projects: text search, chat approval, text sync, targeted media, per-project folders and one chronology.",
   "knows_nothing_about": [
@@ -77,10 +77,15 @@
       "limits": "Existing user session reused without login. No production archive DB writes. Orderly bounded process stop, not a crash/power-loss test. Video/audio/documents, full sync/export and Go Decor pinned-version switch not checked."
     }
   ],
-  "status": "Canonical source; clean minimal install and bounded live photo download/restart/dedup verified. Full export/crash-resume, other media kinds and Go Decor pinned-version switch remain unverified.",
+  "status": "Canonical source; clean minimal install, bounded live photos, synthetic SQLite export/provenance and subprocess crash-resume verified. Go Decor pinned-version switch and broader live acceptance remain pending.",
   "canonical_source": "KhDenis/skills: telegram-archive-research/assets/engine",
   "excluded_adapters": [
     "audio_notes.py export-kb remains in the private application because it writes the application KB schema",
     "m4_whisper_task.sh remains in the private application because it encodes server paths"
-  ]
+  ],
+  "synthetic_checks": {
+    "export": "approved chats only; message identity/date/sender/reply provenance; deterministic repeat; previous export survives failed replacement",
+    "media": "SIGKILL during second fake transfer; first committed item preserved; pending transfer retried; corrupt pending destination repaired; repeat makes no requests",
+    "limits": "Fake Telegram transport. Actual subprocess kill, filesystem and SQLite. No hardware power-loss guarantee."
+  }
 }

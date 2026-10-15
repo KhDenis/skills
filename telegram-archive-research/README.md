@@ -1,7 +1,7 @@
 # Telegram Archive
 
 Canonical source: `KhDenis/skills`, `telegram-archive-research/assets/engine`.
-Version: **0.3.0**, a source migration candidate from the Go Decor archive engine
+Version: **0.3.1**, a source migration candidate from the Go Decor archive engine
 at commit `3342ccf6153f0160799269fb6c8ed01c77f477e6`.
 
 The CLI works independently of an agent: approve dialogs, synchronize text into
@@ -54,3 +54,23 @@ stop and repeat skipping worked for this selection. It does not prove recovery
 from a killed process or power loss, other attachment kinds, full history export
 or the application's switch to the portable module. No profile, source message
 identifier, customer file, session or private verification harness is published.
+
+## Export and crash recovery checks
+
+The synthetic SQLite scenario verifies that `export-analysis` exports approved
+chats only, preserves `(dialog_id, id)`, date, sender, dialog metadata and reply
+references, and produces identical JSONL on repeat. Export now writes a private
+600-mode temporary file and replaces the last complete export only after success.
+
+A subprocess test kills its own downloader while the second synthetic transfer
+is incomplete. A new process keeps the first committed item, downloads the second
+again and skips both on a further run. The final checks validate SQLite integrity,
+file hashes, absence of rejected/pending chat requests and duplicate outputs.
+A corrupt destination left by an older interrupted copy is repaired before its
+path is committed. New media copies are verified and published by atomic replace.
+
+These are real subprocess termination and disk/SQLite operations with fake
+Telegram transport. They do not demonstrate live Telegram crash recovery, hardware
+power-loss durability or all media formats. Old private temporary files from a
+SIGKILL may remain until the operating system/profile owner cleans them up; they
+are never treated as a completed attachment. Live photo verification is separate.
