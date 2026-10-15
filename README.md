@@ -6,7 +6,7 @@ Portable Codex skills maintained by KhDenis.
 
 ## Telegram Archive Research
 
-`telegram-archive-research` installs a sanitized local engine for authorized Telegram archival, transcription, linked-file downloads, and search. It can also rank likely work chats from bounded previews, require explicit approval before archival, download images only from approved chats, and build per-project folders with source-linked timelines. It contains no credentials, Telegram sessions, databases, messages, media, or logs.
+`telegram-archive-research` installs a sanitized local engine for authorized Telegram archival, transcription, linked-file downloads, and search. It can also rank likely work chats from bounded previews, require explicit approval before archival, download targeted media for chosen project messages, tag images, build per-project folders with source-linked timelines and chronology, generate portfolio skeletons, and transcribe voice/audio/video notes. It contains no credentials, Telegram sessions, databases, messages, media, or logs.
 
 ```bash
 mkdir -p ~/.codex/skills
