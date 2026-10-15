@@ -436,52 +436,6 @@ def triage(args: argparse.Namespace, db: sqlite3.Connection) -> None:
     print("Triage:", ", ".join(f"{key}={value}" for key, value in sorted(counts.items())))
 
 
-def export_kb(args: argparse.Namespace, db: sqlite3.Connection) -> None:
-    """Write audio assets and transcripts into the knowledge base; touches only its own columns."""
-    kb = sqlite3.connect(args.kb)
-    kb.execute("PRAGMA busy_timeout = 30000")
-    kb.execute("PRAGMA foreign_keys = ON")
-    known = {row[0] for row in kb.execute("SELECT id FROM projects")}
-    rows = [row for row in selection(db, args) if row["local_path"]]
-    assets = texts = 0
-    for start in range(0, len(rows), 200):
-        with kb:
-            for row in rows[start:start + 200]:
-                asset_id = f"tg:{row['dialog_id']}:{row['message_id']}"
-                kb.execute("""INSERT INTO assets(id,project_id,kind,source,path,bytes,duration_s,taken_at,author)
-                    VALUES (?,?,?,'telegram',?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
-                    project_id=COALESCE(assets.project_id, excluded.project_id), path=excluded.path,
-                    bytes=excluded.bytes, duration_s=excluded.duration_s, taken_at=excluded.taken_at,
-                    author=excluded.author, updated_at=datetime('now')""",
-                    (asset_id, row["project_id"] if row["project_id"] in known else None,
-                     "video" if row["kind"] == "video_note" else "audio",
-                     str(PROJECT_ROOT / row["local_path"]), row["size_bytes"], row["duration_s"],
-                     row["date"], row["sender"]))
-                assets += 1
-                grade = db.execute("SELECT score, decision, reasons FROM triage WHERE dialog_id=? AND message_id=?",
-                                   (row["dialog_id"], row["message_id"])).fetchone()
-                if grade:
-                    kb.execute("UPDATE assets SET triage=?, triage_score=?, triage_reason=? WHERE id=?",
-                               ("skip" if grade["decision"] == "skip" else "keep", grade["score"],
-                                ", ".join(json.loads(grade["reasons"])), asset_id))
-                if not grade or grade["decision"] == "skip":
-                    continue
-                # Only models good enough to be read: tiny is for triage.
-                for text in db.execute("""SELECT model, language, text, avg_logprob FROM transcripts
-                        WHERE dialog_id=? AND message_id=? AND scope='full' AND text<>'' AND model<>'tiny'""",
-                        (row["dialog_id"], row["message_id"])):
-                    useful, summary = extract_summary(text["text"])
-                    kb.execute("""INSERT INTO transcripts(asset_id,model,language,text,avg_logprob,useful,summary)
-                        VALUES (?,?,?,?,?,?,?) ON CONFLICT(asset_id,model) DO UPDATE SET language=excluded.language,
-                        text=excluded.text, avg_logprob=excluded.avg_logprob, useful=excluded.useful,
-                        summary=excluded.summary""",
-                        (asset_id, f"whisper-{text['model']}", text["language"], text["text"],
-                         text["avg_logprob"], useful, summary))
-                    texts += 1
-    kb.close()
-    print(f"Knowledge base: {assets} assets, {texts} transcripts written")
-
-
 def import_jsonl(args: argparse.Namespace, db: sqlite3.Connection) -> None:
     """Load transcripts made by whisper_batch.py; paths are <dialog_id>/<message_id>.<ext>."""
     count = 0
@@ -553,9 +507,6 @@ def main() -> None:
             command.add_argument("--radius", type=int, default=4, help="Neighbour messages on each side")
             command.add_argument("--keep", type=float, default=1.0, help="Minimal score to keep")
             command.add_argument("--weak-logprob", type=float, default=-0.75)
-    export = sub.add_parser("export-kb", help="Write assets and transcripts into the knowledge base")
-    export.add_argument("--kb", type=Path, required=True, help="kb.sqlite3 with the assets and transcripts tables")
-    export.add_argument("--project", action="append")
     import_parser = sub.add_parser("import-jsonl", help="Load transcripts written by whisper_batch.py")
     import_parser.add_argument("file", type=Path)
     args = parser.parse_args()
@@ -564,7 +515,7 @@ def main() -> None:
         if args.command in ("scan", "download"):
             asyncio.run({"scan": scan, "download": download}[args.command](args, db))
         else:
-            {"report": report, "transcribe": transcribe, "triage": triage, "export-kb": export_kb,
+            {"report": report, "transcribe": transcribe, "triage": triage,
              "import-jsonl": import_jsonl}[args.command](args, db)
     finally:
         db.close()

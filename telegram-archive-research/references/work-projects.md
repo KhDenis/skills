@@ -170,10 +170,10 @@ The agent may add a source-grounded `summary.md`, project facts, participant rol
 
 ## 8. Combined Chronology and State Report
 
-After `materialize` has placed the project folders (for Go Decor, with `--output-dir` inside the synchronized Google Drive folder), write one chronology across all projects into the same directory:
+After `materialize` has placed the project folders (with `--output-dir` inside the chosen local or synchronized folder), write one chronology across all projects into the same directory:
 
 ```bash
-"$PY" "$ENGINE/scripts/chronology.py" timeline --output-dir "<Drive>/Go Decor/Projects"
+"$PY" "$ENGINE/scripts/chronology.py" timeline --output-dir "<output>/Projects"
 ```
 
 `chronology.md` starts with a table of projects (first and last date, messages, attachments, folder link) and then lists every project message by day with relative links to the project folder and the attachment file. `chronology.jsonl` holds the same records for tools. Links are relative, so the folder can be copied as a whole. The script opens the database read-only and never contacts Telegram.
@@ -189,13 +189,13 @@ prints counts as JSON (dialogs by status, messages, attachments by kind and how 
 When images are tagged (section 5) and the project folders hold the files (section 7), write `portfolio.json` into every project folder:
 
 ```bash
-"$PY" "$ENGINE/scripts/portfolio.py" --output-dir "<Drive>/Go Decor/Projects" build
+"$PY" "$ENGINE/scripts/portfolio.py" --output-dir "<output>/Projects" build
 ```
 
 The file has two parts. `generated` is rewritten on every run: project dates, message count, partners (who wrote, how often), chats, and the tagged files that exist in the folder, grouped as `before` (renders, drawings), `after` (finished object) and `progress` (site photos, untriaged camera photos), each with its reference, date, relative file path and caption. `editorial` is written by the agent with the owner and is never overwritten: `title`, `date`, `event`, `summary`, `collaborators`, and the references chosen for `before` and `after`. Base the editorial text on the project's `timeline.md`; state only what the messages show.
 
 ```bash
-"$PY" "$ENGINE/scripts/portfolio.py" --output-dir "<Drive>/Go Decor/Projects" check
+"$PY" "$ENGINE/scripts/portfolio.py" --output-dir "<output>/Projects" check
 ```
 
 lists per project what is still missing and marks a project `ready` when the texts are filled and both `before` and `after` have chosen images. It exits with 1 when a chosen reference is not a tagged file of the project or its file is gone. A broken `portfolio.json` is never overwritten by `build`.
@@ -205,7 +205,7 @@ lists per project what is still missing and marks a project `ready` when the tex
 One candidate for the designer stage, to be compared with the others on real projects before it is chosen: an HTML page built from the ready `portfolio.json` files, printable to PDF.
 
 ```bash
-"$PY" "$ENGINE/scripts/portfolio_html.py" --output-dir "<Drive>/Go Decor/Projects" --pdf
+"$PY" "$ENGINE/scripts/portfolio_html.py" --output-dir "<output>/Projects" --pdf
 ```
 
 It writes `portfolio.html` into every ready project folder and a combined `portfolio.html` (cover, contents, one page per project, newest first) next to the folders; `--pdf` prints the combined page with headless Chrome when it is installed. Projects that are not ready are skipped with the reason; `--include-incomplete` renders them as drafts. Only the images chosen in `editorial.before` and `editorial.after` are shown. `--theme theme.json` sets `company`, `tagline`, `contacts`, `logo` (path relative to the output directory), the colours `accent`, `ink`, `paper`, `muted`, `font` and the section labels. The page loads nothing from the network and links files relatively.

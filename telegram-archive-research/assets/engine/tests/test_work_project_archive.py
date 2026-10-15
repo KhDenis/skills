@@ -24,9 +24,9 @@ import work_project_archive as app
 
 class WorkProjectArchiveTests(unittest.TestCase):
     def test_score_dialog_uses_title_messages_and_images(self):
-        keywords = app.parse_keywords("Go decor renders", "интерьер")
+        keywords = app.parse_keywords("Studio decor renders", "интерьер")
         score, reasons = app.score_dialog(
-            "Go Decor Projects",
+            "Studio Decor Projects",
             ["Дизайнер прислал новый рендер интерьера"],
             keywords,
             3,
@@ -172,7 +172,7 @@ class SearchTests(unittest.TestCase):
         self.original = app.RESULTS_ROOT, app.telegram_client
         app.RESULTS_ROOT = self.root / "output"
         self.db = app.open_db(self.root / "archive.sqlite3")
-        team = fake_channel(100, "Go Decor team")
+        team = fake_channel(100, "Archive Projects team")
         news = fake_channel(200, "Decor news", broadcast=True)
         client = fake_user(5, "Client")
         self.messages = [
@@ -233,7 +233,7 @@ class SearchTests(unittest.TestCase):
     def test_report_groups_hits_by_chat(self):
         self.run_search(FakeClient(self.messages))
         report = (app.RESULTS_ROOT / "search_hits.md").read_text(encoding="utf-8")
-        self.assertLess(report.index("Go Decor team"), report.index("## Client"))
+        self.assertLess(report.index("Archive Projects team"), report.index("## Client"))
         self.assertIn("Matching messages: **2** (рендер 2, смета 1)", report)
         self.assertIn("Dates: 2025-01-03 … 2025-01-10", report)
         self.assertIn("`-1000000000100:2`", report)

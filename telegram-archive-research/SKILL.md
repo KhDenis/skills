@@ -5,6 +5,8 @@ description: "Work with consented local Telegram archives: discover dialogs, exp
 
 # Telegram Archive Research
 
+The canonical bundled source is maintained in this repository under `assets/engine`; see [README.md](README.md) for the version and migration limits. Application-specific KB exporters and server wrappers are outside this package.
+
 Resolve the engine in this order: `$TELEGRAM_ARCHIVE_HOME`, then `~/telegram-chat-exporter`. Reuse its virtual environment, Telegram session, proxy configuration, checkpoints, and databases instead of rebuilding one-off scripts in each conversation. If no engine exists, install the sanitized bundled engine by following [deployment.md](references/deployment.md).
 
 ## Boundaries

@@ -56,36 +56,6 @@ class AudioNotesTests(unittest.TestCase):
         self.assertNotIn("Привет", summary)
         self.assertEqual(app.extract_summary("Ну я не знаю, потом приеду."), (0, ""))
 
-    def test_export_writes_triage_and_summary_to_the_knowledge_base(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            db = app.open_db(root / "audio.sqlite3")
-            kb_path = root / "kb.sqlite3"
-            kb = app.sqlite3.connect(kb_path)
-            kb.executescript("""
-                CREATE TABLE projects (id TEXT PRIMARY KEY);
-                INSERT INTO projects VALUES ('p1');
-                CREATE TABLE assets (id TEXT PRIMARY KEY, project_id TEXT, kind TEXT, source TEXT, path TEXT,
-                    bytes INTEGER, duration_s REAL, taken_at TEXT, author TEXT, updated_at TEXT,
-                    triage TEXT, triage_score REAL, triage_reason TEXT);
-                CREATE TABLE transcripts (asset_id TEXT, model TEXT, language TEXT, text TEXT, useful INTEGER,
-                    summary TEXT, avg_logprob REAL, PRIMARY KEY(asset_id, model));""")
-            kb.close()
-            with db:
-                db.execute("""INSERT INTO items(dialog_id,message_id,kind,date,sender,size_bytes,duration_s,
-                    project_id,local_path) VALUES (-5,7,'voice','2024-01-01','A',10,30,'p1','a/7.oga')""")
-                db.execute("""INSERT INTO transcripts VALUES (-5,7,'small','full','ru',
-                    'Монтаж пола завтра, фанера 18 миллиметров.',-0.3,0.0,1.1,1.0,'now')""")
-                db.execute("INSERT INTO triage VALUES (-5,7,4.0,'tiny','[\"in-project\"]','now')")
-            args = app.argparse.Namespace(kb=kb_path, project=None)
-            app.export_kb(args, db)
-            db.close()
-            kb = app.sqlite3.connect(kb_path)
-            self.assertEqual(kb.execute("SELECT project_id, kind, triage FROM assets").fetchone(),
-                             ("p1", "audio", "keep"))
-            self.assertEqual(kb.execute("SELECT model, useful FROM transcripts").fetchone(), ("whisper-small", 1))
-            kb.close()
-
     def test_database_is_created_with_the_three_tables(self):
         with tempfile.TemporaryDirectory() as directory:
             db = app.open_db(Path(directory) / "audio.sqlite3")

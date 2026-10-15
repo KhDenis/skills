@@ -22,7 +22,7 @@ PAGE_NAME = "portfolio.html"
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 REQUIRED_TEXT = ("title", "date", "event", "summary")
 DEFAULT_THEME: dict[str, str] = {
-    "company": "Go Decor", "tagline": "", "contacts": "", "logo": "",
+    "company": "Archive Projects", "tagline": "", "contacts": "", "logo": "",
     "accent": "#8a6d3b", "ink": "#1f1f1f", "paper": "#ffffff", "muted": "#6b6b6b",
     "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
     "before_label": "Было", "after_label": "Стало", "partners_label": "Работали вместе",
