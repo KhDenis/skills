@@ -1,5 +1,7 @@
 # Skills
 
+**План и текущая задача:** [ROADMAP.md](ROADMAP.md) → [Issue #1](https://github.com/KhDenis/skills/issues/1). Перед продолжением работы агент читает [AGENTS.md](AGENTS.md) (Claude — [CLAUDE.md](CLAUDE.md)); результаты подтверждаются PR и проверками, а не итогами чата.
+
 Portable Codex skills maintained by KhDenis.
 
 ## Telegram Archive Research
